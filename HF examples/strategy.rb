@@ -97,11 +97,27 @@ class MallardDuck < Duck
   end
 end
 
+class ModelDuck < Duck
+  def initialize
+    @fly_behavior = FlyNoWay.new
+    @quack_behavior = Quack.new
+  end
+
+  def display_duck
+    puts 'I\'m a model duck'
+  end
+end
+
 class MiniDuckSimulator
   def initialize
     mallard = MallardDuck.new
     mallard.perform_quack
     mallard.perform_fly
+
+    model_duck = ModelDuck.new
+    model_duck.perform_fly
+    model_duck.fly_behavior = FlyRocketPowered.new
+    model_duck.perform_fly
   end
 end
 
