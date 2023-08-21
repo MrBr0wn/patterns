@@ -1,64 +1,67 @@
+# frozen_string_literal: true
+
 class Subject
-	def attach(observer)
-		raise NotImplementedError, "#{self.class} has not implemented method '#{__method__}'"
-	end
+  def attach(observer)
+    raise NotImplementedError, "#{self.class} has not implemented method '#{__method__}'"
+  end
 
-	def detach(observer)
-		raise NotImplementedError, "#{self.class} has not implemented method '#{__method__}'"
-	end
+  def detach(observer)
+    raise NotImplementedError, "#{self.class} has not implemented method '#{__method__}'"
+  end
 
-	def notify
-		raise NotImplementedError, "#{self.class} has not implemented method '#{__method__}'"
-	end
+  def notify
+    raise NotImplementedError, "#{self.class} has not implemented method '#{__method__}'"
+  end
 end
 
 class ConcreteSubject < Subject
-	attr_accessor :state
+  attr_accessor :state
 
-	def initialize
-		@observers = []
-	end
+  def initialize
+    @observers = []
+  end
 
-	def attach(observer)
-		puts 'Subject: Attached an observer.'
-		@observers << observer
-	end
+  def attach(observer)
+    puts 'Subject: Attached an observer.'
+    @observers << observer
+  end
 
-	def detach(observer)
-		@observers.delete(observer)
-	end
+  def detach(observer)
+    @observers.delete(observer)
+  end
 
-	def notify
-		puts 'Subject: Notifying observers...'
-		@observers.each { |observer| observer.update(self) }
-	end
+  def notify
+    puts 'Subject: Notifying observers...'
+    @observers.each { |observer| observer.update(self) }
+  end
 
-	def some_buisness_logic
-		puts "\nSubject: I'm doing something important."
-		@state = rand(0..10)
+  def some_buisness_logic
+    puts "\nSubject: I'm doing something important."
+    @state = rand(0..10)
 
-		puts "Subject: My state has just changed to: #{@state}"
-		notify
-	end
+    puts "Subject: My state has just changed to: #{@state}"
+    notify
+  end
 end
 
 class Observer
-	def update(_subject)
-		raise NotImplementedError, "#{self.class} has not implemented method '#{__method__}'"
-	end
+  def update(_subject)
+    raise NotImplementedError, "#{self.class} has not implemented method '#{__method__}'"
+  end
 end
 
 class ConcreteObserverA < Observer
-	def update(subject)
-		puts 'ConcreteObserverA: Reacted to the event' if subject.state < 3
-	end
+  def update(subject)
+    puts 'ConcreteObserverA: Reacted to the event' if subject.state < 3
+  end
 end
 
 class ConcreteObserverB < Observer
-	def update(subject)
-		return unless subject.state.zero? || subject.state >= 2
-		puts 'ConcreteObserverB: Reacted to the event'
-	end
+  def update(subject)
+    return unless subject.state.zero? || subject.state >= 2
+
+    puts 'ConcreteObserverB: Reacted to the event'
+  end
 end
 
 subject = ConcreteSubject.new
