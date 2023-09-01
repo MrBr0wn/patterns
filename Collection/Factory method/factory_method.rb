@@ -1,49 +1,51 @@
+# frozen_string_literal: true
+
 class Creator
-	def factory_method
-		raise NotEmplimentedError, "#{self.class} has not implemented method '#{__method__}'" 
-	end
+  def factory_method
+    raise NotEmplimentedError, "#{self.class} has not implemented method '#{__method__}'" 
+  end
 
-	def some_operation
-		product = factory_method
+  def some_operation
+    product = factory_method
 
-		result = "Creator: The same creator's code has just worked with #{product.operation}"
+    result = "Creator: The same creator's code has just worked with #{product.operation}"
 
-		result
-	end
+    result
+  end
 end
 
 class ConcreteCreatorA < Creator
-	def factory_method
-		ConcreteProductA.new
-	end
+  def factory_method
+    ConcreteProductA.new
+  end
 end
 
 class ConcreteCreatorB < Creator
-	def factory_method
-		ConcreteProductB.new
-	end
+  def factory_method
+    ConcreteProductB.new
+  end
 end
 
 class Product
-	def operation
-		raise NotEmplimentedError, "#{self.class} has not implemented method '#{__method__}'"
-	end
+  def operation
+    raise NotEmplimentedError, "#{self.class} has not implemented method '#{__method__}'"
+  end
 end
 
 class ConcreteProductA < Product
-	def operation
-		'{Result of the ConcreteProductA}'
-	end
+  def operation
+    '{Result of the ConcreteProductA}'
+  end
 end
 
 class ConcreteProductB < Product
-	def operation
-		'{Result of the ConcreteProductB}'
-	end
+  def operation
+    '{Result of the ConcreteProductB}'
+  end
 end
 
 def client_code(creator)
-	puts "Client: I'm not aware of the creator's class, but it still works.\n #{creator.some_operation}"
+  puts "Client: I'm not aware of the creator's class, but it still works.\n #{creator.some_operation}"
 end
 
 puts 'App Launched with the ConcreteCreatorA.'
