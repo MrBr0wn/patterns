@@ -4,6 +4,10 @@ class Command
   def execute
     raise NotImplementedError, "#{self.class} has not implemented '#{__method__}'"
   end
+
+  def undo
+    raise NotImplementedError, "#{self.class} has not implemented '#{__method__}'"
+  end
 end
 
 class NoCommand < Command
@@ -27,37 +31,38 @@ class Light
 end
 
 class CeilingFan
-  HIGHT = 2
-  MEDIUM = 1
-  LOW = 0
+  HIGHT = 3
+  MEDIUM = 2
+  LOW = 1
+  OFF = 0
 
   def initialize(location)
     @location = location
-    @level = nil
+    @speed = OFF
   end
 
   def high
-    @level = HIGHT
+    @speed = HIGHT
     puts "#{@location} ceiling fan is on high"
   end
 
   def medium
-    @level = MEDIUM
+    @speed = MEDIUM
     puts "#{@location} ceiling fan is on medium"
   end
 
   def low
-    @level = LOW
+    @speed = LOW
     puts "#{@location} ceiling fan is on LOW"
   end
 
   def ceiling_off
-    @level = 0
+    @speed = OFF
     puts "#{@location} ceiling fan is off"
   end
 
   def speed
-    @level
+    @speed
   end
 end
 
@@ -125,6 +130,10 @@ class LightOffCommand < Command
   def execute
     @light.light_off
   end
+
+  def undo
+    @light.light_on
+  end
 end
 
 class LightOnCommand < Command
@@ -135,15 +144,105 @@ class LightOnCommand < Command
   def execute
     @light.light_on
   end
+
+  def undo
+    @light.light_off
+  end
 end
 
 class CeilingFanOnCommand < Command
   def initialize(ceiling_fan)
     @ceiling_fan = ceiling_fan
+    @prev_speed = nil
   end
 
   def execute
+    @prev_speed = @ceiling_fan.speed
     @ceiling_fan.high
+  end
+
+  def undo
+    if @prev_speed == CeilingFan::HIGHT
+      @ceiling_fan.high
+    elsif @prev_speed == CeilingFan::MEDIUM
+      @ceiling_fan.medium
+    elsif @prev_speed == CeilingFan::LOW
+      @ceiling_fan.low
+    elsif @prev_speed == CeilingFan::OFF
+      @ceiling_fan.ceiling_off
+    end
+  end
+end
+
+class CeilingFanHighCommand < Command
+  def initialize(ceiling_fan)
+    @ceiling_fan = ceiling_fan
+    @prev_speed = nil
+  end
+
+  def execute
+    @prev_speed = @ceiling_fan.speed
+    @ceiling_fan.high
+  end
+
+  def undo
+    if @prev_speed == CeilingFan::HIGHT
+      @ceiling_fan.high
+    elsif @prev_speed == CeilingFan::MEDIUM
+      @ceiling_fan.medium
+    elsif @prev_speed == CeilingFan::LOW
+      @ceiling_fan.low
+    elsif @prev_speed == CeilingFan::OFF
+      @ceiling_fan.ceiling_off
+    end
+  end
+end
+
+class CeilingFanLowCommand < Command
+  def initialize(ceiling_fan)
+    @ceiling_fan = ceiling_fan
+    @prev_speed = nil
+  end
+
+  def execute
+    @prev_speed = @ceiling_fan.speed
+    @ceiling_fan.low
+  end
+
+  def undo
+    if @prev_speed == CeilingFan::HIGHT
+      @ceiling_fan.high
+    elsif @prev_speed == CeilingFan::MEDIUM
+      @ceiling_fan.medium
+    elsif @prev_speed == CeilingFan::LOW
+      @ceiling_fan.low
+    elsif @prev_speed == CeilingFan::OFF
+      @ceiling_fan.ceiling_off
+    end
+  end
+end
+
+class CeilingFanMediumCommand < Command
+  def initialize(ceiling_fan)
+    @ceiling_fan = ceiling_fan
+    @prev_speed = nil
+  end
+
+  def execute
+    @prev_speed = @ceiling_fan.speed
+    @ceiling_fan.medium
+  end
+
+  def undo
+    if @prev_speed == CeilingFan::HIGHT
+      @ceiling_fan.high
+    elsif @prev_speed == CeilingFan::MEDIUM
+      @ceiling_fan.medium
+    elsif @prev_speed == CeilingFan::LOW
+      @ceiling_fan.low
+    elsif @prev_speed == CeilingFan::OFF
+      @ceiling_fan.ceiling_off
+    end
   end
 end
 
@@ -154,6 +253,18 @@ class CeilingFanOffCommand < Command
 
   def execute
     @ceiling_fan.ceiling_off
+  end
+
+  def undo
+    if @prev_speed == CeilingFan::HIGHT
+      @ceiling_fan.high
+    elsif @prev_speed == CeilingFan::MEDIUM
+      @ceiling_fan.medium
+    elsif @prev_speed == CeilingFan::LOW
+      @ceiling_fan.low
+    elsif @prev_speed == CeilingFan::OFF
+      @ceiling_fan.ceiling_off
+    end
   end
 end
 
@@ -205,6 +316,7 @@ class RemoteControl
   def initialize
     @on_commands = []
     @off_commands = []
+    @undo_command = NoCommand.new
     no_command = NoCommand.new
     7.times do |i|
       @on_commands[i] = no_command
@@ -219,10 +331,16 @@ class RemoteControl
 
   def on_button_was_pushed(slot)
     @on_commands[slot].execute
+    @undo_command = @on_commands[slot]
   end
 
   def off_button_was_pushed(slot)
     @off_commands[slot].execute
+    @undo_command = @off_commands[slot]
+  end
+
+  def undo_button_was_pushed
+    @undo_command.undo
   end
 
   def display
@@ -230,6 +348,7 @@ class RemoteControl
     @on_commands.count.times do |i|
       puts "[slot #{i}] #{@on_commands[i].class}\t\t#{@off_commands[i].class}\n"
     end
+    puts "[undo] #{@undo_command.class}\n"
     puts "\n"
   end
 end
@@ -272,6 +391,34 @@ class RemoteLoader
     remote_control.off_button_was_pushed(2)
     remote_control.on_button_was_pushed(3)
     remote_control.off_button_was_pushed(3)
+
+    puts "\n--- undo button test ---\n"
+
+    # undo test
+    remote_control.on_button_was_pushed(0)
+    remote_control.off_button_was_pushed(0)
+    remote_control.undo_button_was_pushed
+    remote_control.off_button_was_pushed(0)
+    remote_control.on_button_was_pushed(0)
+    remote_control.undo_button_was_pushed
+
+    puts "\n--- test undo with state ---\n"
+
+    # test undo with state
+    ceiling_fan_medium = CeilingFanMediumCommand.new(ceiling_fan)
+    ceiling_fan_high = CeilingFanHighCommand.new(ceiling_fan)
+
+    remote_control.setup_command(0, ceiling_fan_medium, ceiling_fan_off)
+    remote_control.setup_command(1, ceiling_fan_high, ceiling_fan_off)
+
+    remote_control.on_button_was_pushed(0)
+    remote_control.off_button_was_pushed(0)
+    remote_control.display
+    remote_control.undo_button_was_pushed
+
+    remote_control.on_button_was_pushed(1)
+    remote_control.display
+    remote_control.undo_button_was_pushed
   end
 end
 
